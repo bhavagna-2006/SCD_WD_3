@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #fbc2eb, #a6c1ee);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .quiz-container {
+      max-width: 600px;
+      background: #fff;
+      margin: auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+
+    #quiz-box {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0;
+    }
+
+    #next-btn, #restart-btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .correct {
+      color: green;
+    }
+
+    .incorrect {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h1>Interactive Quiz Game</h1>
+    <div id="quiz-box">
+      <!-- Questions will be dynamically loaded here -->
+    </div>
+    <button id="next-btn">Next</button>
+    <div id="result" class="hidden"></div>
+    <button id="restart-btn" class="hidden">Restart</button>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        type: "single",
+        question: "What is the capital of France?",
+        options: ["Paris", "Rome", "Madrid", "Berlin"],
+        correct: "Paris"
+      },
+      {
+        type: "multi",
+        question: "Select all prime numbers",
+        options: ["2", "3", "4", "6"],
+        correct: ["2", "3"]
+      },
+      {
+        type: "fill",
+        question: "Fill in the blank: The sun rises in the ____.",
+        correct: "east"
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const quizBox = document.getElementById('quiz-box');
+    const nextBtn = document.getElementById('next-btn');
+    const resultBox = document.getElementById('result');
+    const restartBtn = document.getElementById('restart-btn');
+
+    function loadQuestion() {
+      const q = questions[currentQuestion];
+      quizBox.innerHTML = `<h2>${q.question}</h2>`;
+
+      if (q.type === "single") {
+        q.options.forEach(opt => {
+          quizBox.innerHTML += `
+            <label>
+              <input type="radio" name="answer" value="${opt}"> ${opt}
+            </label>`;
+        });
+      }
+
+      if (q.type === "multi") {
+        q.options.forEach(opt => {
+          quizBox.innerHTML += `
+            <label>
+              <input type="checkbox" name="answer" value="${opt}"> ${opt}
+            </label>`;
+        });
+      }
+
+      if (q.type === "fill") {
+        quizBox.innerHTML += `
+          <input type="text" id="fill-blank" placeholder="Type your answer here" />`;
+      }
+    }
+
+    function getAnswer() {
+      const q = questions[currentQuestion];
+      if (q.type === "single") {
+        const selected = document.querySelector('input[name="answer"]:checked');
+        return selected ? selected.value : null;
+      }
+      if (q.type === "multi") {
+        return Array.from(document.querySelectorAll('input[name="answer"]:checked')).map(cb => cb.value);
+      }
+      if (q.type === "fill") {
+        return document.getElementById('fill-blank').value.trim().toLowerCase();
+      }
+    }
+
+    function checkAnswer(userAnswer) {
+      const q = questions[currentQuestion];
+      if (q.type === "multi") {
+        return Array.isArray(userAnswer) &&
+          userAnswer.length === q.correct.length &&
+          userAnswer.every(val => q.correct.includes(val));
+      }
+      if (q.type === "fill") {
+        return userAnswer === q.correct.toLowerCase();
+      }
+      return userAnswer === q.correct;
+    }
+
+    nextBtn.addEventListener('click', () => {
+      const userAnswer = getAnswer();
+      if (userAnswer === null || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
+        alert("Please select or enter an answer.");
+        return;
+      }
+
+      if (checkAnswer(userAnswer)) score++;
+
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    });
+
+    function showResult() {
+      quizBox.classList.add("hidden");
+      nextBtn.classList.add("hidden");
+      resultBox.classList.remove("hidden");
+      restartBtn.classList.remove("hidden");
+      resultBox.innerHTML = `<h2>Your Score: ${score}/${questions.length}</h2>`;
+    }
+
+    restartBtn.addEventListener('click', () => {
+      currentQuestion = 0;
+      score = 0;
+      resultBox.classList.add("hidden");
+      restartBtn.classList.add("hidden");
+      quizBox.classList.remove("hidden");
+      nextBtn.classList.remove("hidden");
+      loadQuestion();
+    });
+
+    // Start the quiz
+    loadQuestion();
+  </script>
+</body>
+</html>
